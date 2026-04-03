@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 
-import { useMockUser } from "@/components/providers/mock-user-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { DEFAULT_AUTH_REDIRECT, resolveAuthRedirect } from "@/lib/auth";
@@ -14,7 +14,7 @@ type AuthPageViewProps = {
 };
 
 export function AuthPageView({ nextPath }: AuthPageViewProps) {
-  const { login, signup } = useMockUser();
+  const { login, signup, googleLogin } = useAuth();
   const [activeView, setActiveView] = useState<"login" | "signup">("login");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formState, setFormState] = useState({
@@ -80,8 +80,20 @@ export function AuthPageView({ nextPath }: AuthPageViewProps) {
     }
   }
 
-  function handleSocialAuth() {
-    setError("Email and password auth is live. Add Google or GitHub providers in Firebase Auth to enable social sign-in.");
+  async function handleSocialAuth() {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await googleLogin(redirectPath);
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to complete Google authentication.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (

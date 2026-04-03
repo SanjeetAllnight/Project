@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tag } from "@/components/ui/tag";
-import { useMockUser } from "@/components/providers/mock-user-provider";
-import { getMentors } from "@/lib/api";
+import { useAuth } from "@/components/providers/auth-provider";
+import { getMentors } from "@/lib/firebaseServices";
 import { profileData } from "@/lib/mock-data";
 import { toMentorCardData } from "@/lib/view-models";
 
@@ -23,7 +23,7 @@ const badgeToneClasses: Record<string, string> = {
 export default function ProfilePage() {
   const searchParams = useSearchParams();
   const mentorId = searchParams.get("mentor");
-  const { user } = useMockUser();
+  const { user } = useAuth();
   const [selectedMentor, setSelectedMentor] = useState<ReturnType<typeof toMentorCardData>[number] | null>(null);
   const [isLoadingMentor, setIsLoadingMentor] = useState(false);
 
@@ -67,11 +67,11 @@ export default function ProfilePage() {
 
   const activeProfile = useMemo(
     () => ({
-      name: selectedMentor?.name ?? user.name,
-      avatar: selectedMentor?.image ?? user.avatar,
-      cover: selectedMentor?.coverImage ?? user.coverImage,
-      location: selectedMentor?.location ?? user.location,
-      role: selectedMentor?.role ?? user.title,
+      name: selectedMentor?.name ?? user?.name ?? "SkillCache Member",
+      avatar: selectedMentor?.image ?? "/default-avatar.png",
+      cover: selectedMentor?.coverImage ?? "/default-cover.png",
+      location: selectedMentor?.location ?? "Remote",
+      role: selectedMentor?.role ?? "Creative Member",
       narrative: selectedMentor?.narrative ?? profileData.narrative,
     }),
     [selectedMentor, user],

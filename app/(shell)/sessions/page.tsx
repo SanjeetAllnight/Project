@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SessionCard } from "@/components/cards/session-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/components/ui/icon";
-import { getSessions, type ApiSession } from "@/lib/api";
+import { getSessions, type ApiSession } from "@/lib/firebaseServices";
 import {
   toFeaturedSessionCard,
   toPastSessionCards,

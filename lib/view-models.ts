@@ -1,7 +1,7 @@
 import type { MentorCardData } from "@/components/cards/mentor-card";
 import type { SessionCardData } from "@/components/cards/session-card";
 import { mentorsData } from "@/lib/mock-data";
-import type { ApiSession } from "@/lib/api";
+import type { ApiSession } from "@/lib/firebaseServices";
 import type { BackendUser } from "@/lib/mockUser";
 
 const mentorVisuals = mentorsData.mentors;

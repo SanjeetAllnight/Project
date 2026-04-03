@@ -4,12 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { useMockUser } from "@/components/providers/mock-user-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { SessionCard } from "@/components/cards/session-card";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getSessions, type ApiSession } from "@/lib/api";
+import { getSessions, type ApiSession } from "@/lib/firebaseServices";
 import { dashboardData, mentors } from "@/lib/mock-data";
 import { toDashboardSessionCards } from "@/lib/view-models";
 
@@ -20,7 +20,7 @@ const statIconTone: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const { user } = useMockUser();
+  const { user } = useAuth();
   const [sessions, setSessions] = useState<ApiSession[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
@@ -66,7 +66,7 @@ export default function DashboardPage() {
     <div className="page-shell page-stack">
       <section className="section-stack max-w-3xl">
         <h1 className="font-headline text-4xl font-extrabold tracking-tighter text-on-surface md:text-5xl">
-          Welcome back, <span className="text-primary">{user.firstName}</span>.
+          Welcome back, <span className="text-primary">{user?.name}</span>.
         </h1>
         <p className="max-w-xl text-lg text-on-surface-variant">
           Your creative laboratory is ready. You have 3 pending exchange requests and a session starting in 45 minutes.

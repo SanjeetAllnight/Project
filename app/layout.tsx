@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { Inter, Manrope } from "next/font/google";
 
 import "@/app/globals.css";
-import { MockUserProvider } from "@/components/providers/mock-user-provider";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { AUTH_COOKIE_NAME } from "@/lib/auth";
 
 const inter = Inter({
@@ -44,9 +44,9 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${manrope.variable} bg-surface font-body text-on-surface antialiased`}
       >
-        <MockUserProvider initialIsLoggedIn={isLoggedIn}>
+        <AuthProvider initialIsLoggedIn={isLoggedIn}>
           {children}
-        </MockUserProvider>
+        </AuthProvider>
       </body>
     </html>
   );

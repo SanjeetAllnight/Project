@@ -6,7 +6,7 @@ import { MentorCard } from "@/components/cards/mentor-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { getMentors } from "@/lib/api";
+import { getMentors } from "@/lib/firebaseServices";
 import { toMentorCardData } from "@/lib/view-models";
 import type { MentorCardData } from "@/components/cards/mentor-card";
 

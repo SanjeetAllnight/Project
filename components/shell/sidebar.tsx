@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { useMockUser } from "@/components/providers/mock-user-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { getSidebarConfig, navItems } from "@/lib/shell-config";
@@ -17,7 +17,7 @@ function isActive(pathname: string, href: string) {
 export function Sidebar() {
   const pathname = usePathname();
   const sidebarConfig = getSidebarConfig(pathname);
-  const { user, isLoggedIn } = useMockUser();
+  const { user, isLoggedIn } = useAuth();
 
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col border-r border-outline-variant/10 bg-surface px-5 py-8 xl:px-6 md:flex">
@@ -63,15 +63,15 @@ export function Sidebar() {
         {sidebarConfig.showProfileFooter && isLoggedIn ? (
           <div className="flex items-center gap-3 px-2">
             <Image
-              src={user.avatar}
-              alt={user.name}
+              src={user?.avatar ?? "/default-avatar.png"}
+              alt={user?.name ?? "User avatar"}
               width={40}
               height={40}
               className="h-10 w-10 rounded-full border-2 border-primary-container object-cover"
             />
             <div>
-              <p className="text-sm font-bold">{user.name}</p>
-              <p className="text-xs font-medium text-stone-500">{user.role}</p>
+              <p className="text-sm font-bold">{user?.name}</p>
+              <p className="text-xs font-medium text-stone-500">Creative Member</p>
             </div>
           </div>
         ) : null}

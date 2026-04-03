@@ -1,7 +1,29 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { ResourceCard } from "@/components/cards/resource-card";
-import { repositoryData, resources } from "@/lib/mock-data";
+import { getResources, type FirestoreResource } from "@/lib/firebaseServices";
 
 export default function RepositoryPage() {
+  const [resources, setResources] = useState<({ _id: string } & FirestoreResource)[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadResources() {
+      try {
+        const data = await getResources();
+        if (isMounted) setResources(data as any);
+      } catch (err) {
+        // error handling
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadResources();
+    return () => { isMounted = false; };
+  }, []);
+
   return (
     <div className="page-shell page-stack">
       <section className="section-stack max-w-4xl">
@@ -17,7 +39,7 @@ export default function RepositoryPage() {
 
       <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap items-center gap-3">
-          {repositoryData.filters.map((filter, index) => (
+          {["All Resources", "React", "UI/UX Design", "Typography"].map((filter, index) => (
             <button
               key={filter}
               type="button"
@@ -42,24 +64,20 @@ export default function RepositoryPage() {
       </section>
 
       <section className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-        {resources.map((resource, index) => (
-          <ResourceCard
-            key={resource.title}
-            resource={resource}
-            className={index === 0 ? "md:col-span-2 xl:col-span-2" : ""}
-          />
-        ))}
+        {isLoading ? (
+          <div className="col-span-full py-10 text-center text-stone-500">Loading resources...</div>
+        ) : resources.length === 0 ? (
+          <div className="col-span-full py-10 text-center text-stone-500">No resources found.</div>
+        ) : (
+          resources.map((resource, index) => (
+            <ResourceCard
+              key={resource._id}
+              resource={resource as any}
+              className={index === 0 ? "md:col-span-2 xl:col-span-2" : ""}
+            />
+          ))
+        )}
       </section>
-
-      <div className="flex flex-col items-center pt-2">
-        <p className="mb-6 text-sm text-stone-500">Showing 5 of 124 available materials</p>
-        <button
-          type="button"
-          className="rounded-2xl bg-surface-container-high px-12 py-4 font-bold text-on-surface transition-all hover:bg-surface-container-highest"
-        >
-          Load More Resources
-        </button>
-      </div>
     </div>
   );
 }

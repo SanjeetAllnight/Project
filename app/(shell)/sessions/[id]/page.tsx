@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tag } from "@/components/ui/tag";
-import { getSessionById, type ApiSession } from "@/lib/api";
+import { getSessionById, type ApiSession } from "@/lib/firebaseServices";
 import { formatSessionDateParts } from "@/lib/view-models";
 import { mockUser } from "@/lib/mockUser";
 

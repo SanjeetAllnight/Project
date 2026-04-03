@@ -4,6 +4,7 @@ export type BackendUser = {
   email: string;
   skillsOffered?: string[];
   skillsWanted?: string[];
+  avatar?: string;
 };
 
 export type MockUser = {

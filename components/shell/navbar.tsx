@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { useMockUser } from "@/components/providers/mock-user-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { getHeaderConfig } from "@/lib/shell-config";
@@ -12,7 +12,7 @@ import { getHeaderConfig } from "@/lib/shell-config";
 export function Navbar() {
   const pathname = usePathname();
   const config = getHeaderConfig(pathname);
-  const { user, isLoggedIn, logout } = useMockUser();
+  const { user, isLoggedIn, logout } = useAuth();
 
   return (
     <header className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between gap-4 bg-surface/80 px-5 backdrop-blur-xl sm:px-6 md:left-64 md:px-8 xl:px-12">
@@ -86,8 +86,8 @@ export function Navbar() {
               className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-primary-container transition-transform hover:scale-[1.02]"
             >
               <Image
-                src={user.avatar}
-                alt={user.name}
+                src={user?.avatar ?? "/default-avatar.png"}
+                alt={user?.name ?? "User avatar"}
                 fill
                 className="object-cover"
                 sizes="40px"
