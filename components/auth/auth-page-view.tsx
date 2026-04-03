@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useTransition, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 
 import { useMockUser } from "@/components/providers/mock-user-provider";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ type AuthPageViewProps = {
 export function AuthPageView({ nextPath }: AuthPageViewProps) {
   const { login, signup } = useMockUser();
   const [activeView, setActiveView] = useState<"login" | "signup">("login");
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formState, setFormState] = useState({
     name: "",
     email: "",
@@ -43,39 +43,41 @@ export function AuthPageView({ nextPath }: AuthPageViewProps) {
     }));
   }
 
-  function handleAuth(event: FormEvent<HTMLFormElement>) {
+  async function handleAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
-    startTransition(() => {
-      const request =
-        activeView === "login"
-          ? login(
-              {
-                email: formState.email,
-                password: formState.password,
-              },
-              redirectPath,
-            )
-          : signup(
-              {
-                name: formState.name,
-                email: formState.email,
-                password: formState.password,
-                skillsOffered: [],
-                skillsWanted: [],
-              },
-              redirectPath,
-            );
-
-      request.catch((requestError: unknown) => {
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Unable to complete authentication.",
+    try {
+      if (activeView === "login") {
+        await login(
+          {
+            email: formState.email,
+            password: formState.password,
+          },
+          redirectPath,
         );
-      });
-    });
+      } else {
+        await signup(
+          {
+            name: formState.name,
+            email: formState.email,
+            password: formState.password,
+            skillsOffered: [],
+            skillsWanted: [],
+          },
+          redirectPath,
+        );
+      }
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to complete authentication.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleSocialAuth() {
@@ -235,11 +237,11 @@ export function AuthPageView({ nextPath }: AuthPageViewProps) {
             <Button
               type="submit"
               rounded="xl"
-              disabled={isPending}
+              disabled={isSubmitting}
               className="h-14 w-full text-base disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isPending ? "Signing In..." : submitLabel}
-              {isPending ? null : <Icon name="arrow_forward" className="text-lg" />}
+              {isSubmitting ? "Signing In..." : submitLabel}
+              {isSubmitting ? null : <Icon name="arrow_forward" className="text-lg" />}
             </Button>
           </form>
 
@@ -255,7 +257,7 @@ export function AuthPageView({ nextPath }: AuthPageViewProps) {
             <button
               type="button"
               onClick={handleSocialAuth}
-              disabled={isPending}
+              disabled={isSubmitting}
               className="flex h-14 items-center justify-center gap-3 rounded-2xl bg-surface-container-low text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-70"
             >
               <Image
@@ -269,7 +271,7 @@ export function AuthPageView({ nextPath }: AuthPageViewProps) {
             <button
               type="button"
               onClick={handleSocialAuth}
-              disabled={isPending}
+              disabled={isSubmitting}
               className="flex h-14 items-center justify-center gap-3 rounded-2xl bg-surface-container-low text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-70"
             >
               <svg className="h-5 w-5 fill-on-surface" viewBox="0 0 24 24" aria-hidden="true">

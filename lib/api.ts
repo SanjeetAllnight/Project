@@ -1,4 +1,6 @@
 import {
+  AUTH_COOKIE_NAME,
+  AUTH_COOKIE_OPTIONS,
   AUTH_STORAGE_KEY,
   AUTH_TOKEN_STORAGE_KEY,
   AUTH_USER_STORAGE_KEY,
@@ -90,6 +92,7 @@ export function setStoredAuth(auth: AuthResponse) {
   window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, auth.token);
   window.localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(auth.user));
   window.localStorage.setItem(AUTH_STORAGE_KEY, "1");
+  document.cookie = `${AUTH_COOKIE_NAME}=${auth.token}; ${AUTH_COOKIE_OPTIONS}`;
 }
 
 export function clearStoredAuth() {
@@ -100,6 +103,7 @@ export function clearStoredAuth() {
   window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
   window.localStorage.removeItem(AUTH_USER_STORAGE_KEY);
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -119,6 +123,14 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers,
   });
+
+  if (response.status === 401 && !path.startsWith("/auth")) {
+    clearStoredAuth();
+
+    if (isBrowser()) {
+      window.location.href = "/auth";
+    }
+  }
 
   if (!response.ok) {
     let errorMessage = "Something went wrong.";

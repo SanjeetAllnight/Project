@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const connectDB = require("./config/db");
 const { PORT } = require("./config/env");
+const { authenticateRequest } = require("./middleware/authMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const mentorRoutes = require("./routes/mentorRoutes");
 const resourceRoutes = require("./routes/resourceRoutes");
@@ -16,9 +17,9 @@ app.use(express.json());
 
 app.use("/api", testRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/mentors", mentorRoutes);
-app.use("/api/resources", resourceRoutes);
-app.use("/api/sessions", sessionRoutes);
+app.use("/api/mentors", authenticateRequest, mentorRoutes);
+app.use("/api/resources", authenticateRequest, resourceRoutes);
+app.use("/api/sessions", authenticateRequest, sessionRoutes);
 
 async function startServer() {
   try {

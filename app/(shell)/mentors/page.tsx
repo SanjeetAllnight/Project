@@ -7,12 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { getMentors } from "@/lib/api";
-import { mentorsData } from "@/lib/mock-data";
 import { toMentorCardData } from "@/lib/view-models";
 import type { MentorCardData } from "@/components/cards/mentor-card";
 
 export default function MentorsPage() {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [filters, setFilters] = useState<string[]>([]);
   const [mentors, setMentors] = useState<MentorCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +29,15 @@ export default function MentorsPage() {
 
         if (!isMounted) {
           return;
+        }
+
+        if (!activeFilter) {
+          const skillFilters = Array.from(
+            new Set(
+              response.flatMap((mentor) => mentor.skillsOffered ?? []),
+            ),
+          ).slice(0, 6);
+          setFilters(skillFilters);
         }
 
         setMentors(toMentorCardData(response));
@@ -74,7 +83,7 @@ export default function MentorsPage() {
             <Icon name="filter_alt" className="text-lg" />
             Filters
           </span>
-          {mentorsData.filters.map((filter) => {
+          {filters.map((filter) => {
             const isActive = activeFilter === filter;
 
             return (

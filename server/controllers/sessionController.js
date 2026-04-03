@@ -25,8 +25,9 @@ async function getSessions(_req, res) {
 async function createSession(req, res) {
   try {
     const { title, mentor, learner, date, status = "upcoming" } = req.body;
+    const sessionLearner = learner || req.userId;
 
-    if (!title || !mentor || !learner || !date) {
+    if (!title || !mentor || !sessionLearner || !date) {
       return res.status(400).json({
         message: "Title, mentor, learner, and date are required.",
       });
@@ -35,7 +36,7 @@ async function createSession(req, res) {
     const session = await Session.create({
       title: title.trim(),
       mentor,
-      learner,
+      learner: sessionLearner,
       date,
       status,
     });

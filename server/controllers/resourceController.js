@@ -18,8 +18,9 @@ async function getResources(_req, res) {
 async function createResource(req, res) {
   try {
     const { title, description, tags = [], author } = req.body;
+    const resourceAuthor = author || req.userId;
 
-    if (!title || !description || !author) {
+    if (!title || !description || !resourceAuthor) {
       return res.status(400).json({
         message: "Title, description, and author are required.",
       });
@@ -29,7 +30,7 @@ async function createResource(req, res) {
       title: title.trim(),
       description: description.trim(),
       tags,
-      author,
+      author: resourceAuthor,
     });
 
     const populatedResource = await Resource.findById(resource._id).populate(

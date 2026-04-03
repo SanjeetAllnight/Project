@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { AUTH_COOKIE_NAME, AUTH_COOKIE_VALUE } from "@/lib/auth";
+import { AUTH_COOKIE_NAME } from "@/lib/auth";
+import { verifySessionToken } from "@/lib/session";
 
 const protectedPrefixes = [
   "/dashboard",
@@ -20,13 +21,30 @@ function isProtectedPath(pathname: string) {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isLoggedIn =
-    request.cookies.get(AUTH_COOKIE_NAME)?.value === AUTH_COOKIE_VALUE;
+  const sessionToken = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  return handleRequest(request, pathname, sessionToken);
+}
+
+async function handleRequest(
+  request: NextRequest,
+  pathname: string,
+  sessionToken?: string,
+) {
+  const isLoggedIn = await verifySessionToken(sessionToken);
 
   if (pathname === "/") {
-    return NextResponse.redirect(
+    const response = NextResponse.redirect(
       new URL(isLoggedIn ? "/dashboard" : "/auth", request.url),
     );
+
+    if (sessionToken && !isLoggedIn) {
+      response.cookies.set(AUTH_COOKIE_NAME, "", {
+        path: "/",
+        maxAge: 0,
+      });
+    }
+
+    return response;
   }
 
   if (pathname === "/auth" && isLoggedIn) {
@@ -36,10 +54,28 @@ export function middleware(request: NextRequest) {
   if (isProtectedPath(pathname) && !isLoggedIn) {
     const authUrl = new URL("/auth", request.url);
     authUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(authUrl);
+    const response = NextResponse.redirect(authUrl);
+
+    if (sessionToken) {
+      response.cookies.set(AUTH_COOKIE_NAME, "", {
+        path: "/",
+        maxAge: 0,
+      });
+    }
+
+    return response;
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  if (pathname === "/auth" && sessionToken && !isLoggedIn) {
+    response.cookies.set(AUTH_COOKIE_NAME, "", {
+      path: "/",
+      maxAge: 0,
+    });
+  }
+
+  return response;
 }
 
 export const config = {

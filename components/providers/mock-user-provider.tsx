@@ -12,14 +12,12 @@ import {
 import { useRouter } from "next/navigation";
 
 import {
-  AUTH_COOKIE_MAX_AGE,
-  AUTH_COOKIE_NAME,
-  AUTH_COOKIE_VALUE,
   DEFAULT_AUTH_REDIRECT,
   resolveAuthRedirect,
 } from "@/lib/auth";
 import {
   clearStoredAuth,
+  getStoredToken,
   getStoredUser,
   login as loginRequest,
   signup as signupRequest,
@@ -59,11 +57,15 @@ export function MockUserProvider({
   const [user, setUser] = useState(mockUser);
 
   useEffect(() => {
+    const storedToken = getStoredToken();
     const storedUser = getStoredUser();
 
-    if (storedUser) {
+    if (storedToken && storedUser) {
       setUser(toDisplayUser(storedUser));
       setIsLoggedIn(true);
+    } else {
+      clearStoredAuth();
+      setIsLoggedIn(false);
     }
 
     setIsAuthReady(true);
@@ -73,7 +75,6 @@ export function MockUserProvider({
     const auth = await loginRequest(credentials);
     setUser(toDisplayUser(auth.user));
     setIsLoggedIn(true);
-    document.cookie = `${AUTH_COOKIE_NAME}=${AUTH_COOKIE_VALUE}; path=/; max-age=${AUTH_COOKIE_MAX_AGE}; samesite=lax`;
     router.replace(resolveAuthRedirect(redirectTo));
     router.refresh();
   }, [router]);
@@ -92,7 +93,6 @@ export function MockUserProvider({
   const logout = useCallback(() => {
     setIsLoggedIn(false);
     setUser(mockUser);
-    document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
     clearStoredAuth();
     router.replace("/auth");
     router.refresh();

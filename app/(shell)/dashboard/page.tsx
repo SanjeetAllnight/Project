@@ -1,11 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
+import { useMockUser } from "@/components/providers/mock-user-provider";
 import { SessionCard } from "@/components/cards/session-card";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getSessions, type ApiSession } from "@/lib/api";
 import { dashboardData, mentors } from "@/lib/mock-data";
-import { mockUser } from "@/lib/mockUser";
+import { toDashboardSessionCards } from "@/lib/view-models";
 
 const statIconTone: Record<string, string> = {
   primary: "bg-primary/10 text-primary",
@@ -14,11 +20,53 @@ const statIconTone: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const { user } = useMockUser();
+  const [sessions, setSessions] = useState<ApiSession[]>([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSessions() {
+      try {
+        const response = await getSessions();
+
+        if (!isMounted) {
+          return;
+        }
+
+        setSessions(response);
+      } catch {
+        if (isMounted) {
+          setSessions([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingSessions(false);
+        }
+      }
+    }
+
+    void loadSessions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const activeSessions = sessions.filter(
+    (session) => session.status === "live" || session.status === "upcoming",
+  );
+  const dashboardSessions =
+    activeSessions.length > 0
+      ? toDashboardSessionCards(activeSessions)
+      : dashboardData.upcomingSessions;
+
   return (
     <div className="page-shell page-stack">
       <section className="section-stack max-w-3xl">
         <h1 className="font-headline text-4xl font-extrabold tracking-tighter text-on-surface md:text-5xl">
-          Welcome back, <span className="text-primary">{mockUser.firstName}</span>.
+          Welcome back, <span className="text-primary">{user.firstName}</span>.
         </h1>
         <p className="max-w-xl text-lg text-on-surface-variant">
           Your creative laboratory is ready. You have 3 pending exchange requests and a session starting in 45 minutes.
@@ -173,9 +221,16 @@ export default function DashboardPage() {
           <section className="section-stack">
             <h2 className="font-headline text-xl font-bold">Upcoming Sessions</h2>
             <div className="space-y-4">
-              {dashboardData.upcomingSessions.map((session) => (
-                <SessionCard key={session.title} session={session} />
-              ))}
+              {isLoadingSessions
+                ? Array.from({ length: 2 }).map((_, index) => (
+                    <Skeleton key={index} className="h-32 w-full" />
+                  ))
+                : dashboardSessions.map((session, index) => (
+                    <SessionCard
+                      key={`${session.title}-${index}`}
+                      session={session}
+                    />
+                  ))}
             </div>
             <Button href="/sessions" variant="ghost" className="w-full justify-center text-stone-500">
               View Full Schedule

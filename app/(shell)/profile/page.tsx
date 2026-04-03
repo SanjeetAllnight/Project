@@ -1,10 +1,17 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tag } from "@/components/ui/tag";
-import { mentors, profileData } from "@/lib/mock-data";
-import { mockUser } from "@/lib/mockUser";
+import { useMockUser } from "@/components/providers/mock-user-provider";
+import { getMentors } from "@/lib/api";
+import { profileData } from "@/lib/mock-data";
+import { toMentorCardData } from "@/lib/view-models";
 
 const badgeToneClasses: Record<string, string> = {
   primary: "from-primary/10 text-primary",
@@ -13,24 +20,80 @@ const badgeToneClasses: Record<string, string> = {
   locked: "border-2 border-dashed border-outline-variant text-outline-variant",
 };
 
-type ProfilePageProps = {
-  searchParams: Promise<{ mentor?: string }>;
-};
+export default function ProfilePage() {
+  const searchParams = useSearchParams();
+  const mentorId = searchParams.get("mentor");
+  const { user } = useMockUser();
+  const [selectedMentor, setSelectedMentor] = useState<ReturnType<typeof toMentorCardData>[number] | null>(null);
+  const [isLoadingMentor, setIsLoadingMentor] = useState(false);
 
-export default async function ProfilePage({ searchParams }: ProfilePageProps) {
-  const { mentor } = await searchParams;
-  const selectedMentor = mentor
-    ? mentors.find((entry) => entry.id === mentor)
-    : undefined;
+  useEffect(() => {
+    let isMounted = true;
 
-  const activeProfile = {
-    name: selectedMentor?.name ?? mockUser.name,
-    avatar: selectedMentor?.image ?? mockUser.avatar,
-    cover: selectedMentor?.coverImage ?? mockUser.coverImage,
-    location: selectedMentor?.location ?? mockUser.location,
-    role: selectedMentor?.role ?? mockUser.title,
-    narrative: selectedMentor?.narrative ?? profileData.narrative,
-  };
+    async function loadMentorProfile() {
+      try {
+        setIsLoadingMentor(true);
+        const mentors = await getMentors();
+
+        if (!isMounted) {
+          return;
+        }
+
+        const mentorCards = toMentorCardData(mentors);
+        setSelectedMentor(
+          mentorCards.find((mentor) => mentor.id === mentorId) ?? null,
+        );
+      } catch {
+        if (isMounted) {
+          setSelectedMentor(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingMentor(false);
+        }
+      }
+    }
+
+    if (mentorId) {
+      void loadMentorProfile();
+    } else {
+      setSelectedMentor(null);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [mentorId]);
+
+  const activeProfile = useMemo(
+    () => ({
+      name: selectedMentor?.name ?? user.name,
+      avatar: selectedMentor?.image ?? user.avatar,
+      cover: selectedMentor?.coverImage ?? user.coverImage,
+      location: selectedMentor?.location ?? user.location,
+      role: selectedMentor?.role ?? user.title,
+      narrative: selectedMentor?.narrative ?? profileData.narrative,
+    }),
+    [selectedMentor, user],
+  );
+
+  if (mentorId && isLoadingMentor) {
+    return (
+      <div className="page-shell page-stack">
+        <Skeleton className="h-80 w-full" />
+        <div className="grid gap-10 xl:grid-cols-12">
+          <div className="space-y-8 xl:col-span-4">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+          <div className="space-y-8 xl:col-span-8">
+            <Skeleton className="h-72 w-full" />
+            <Skeleton className="h-56 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-shell page-stack">
@@ -101,9 +164,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 </div>
               </div>
               <span className="text-sm font-medium text-stone-500">
-                {selectedMentor
-                  ? `Connect with ${selectedMentor.name}`
-                  : "Mentored 44+ artisans"}
+                {selectedMentor ? `Connect with ${selectedMentor.name}` : "Mentored 44+ artisans"}
               </span>
             </div>
           </section>
@@ -250,18 +311,20 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               </h2>
               <p className="font-medium text-on-surface-variant">
                 {selectedMentor ? (
-                  <>Explore {selectedMentor.name}&apos;s practice and start a new mentorship exchange.</>
+                  <>
+                    Explore {selectedMentor.name}&apos;s practice and start a new mentorship exchange.
+                  </>
                 ) : (
                   <>
                     Currently mentoring{" "}
-                    <span className="font-bold text-primary">Elena Rossi</span> on
-                    editorial layout strategies.
+                    <span className="font-bold text-primary">atelier members</span> through
+                    focused live sessions and shared resources.
                   </>
                 )}
               </p>
               <div className="flex flex-wrap items-center gap-4">
                 <Button
-                  href={selectedMentor ? "/sessions/advanced-clay-glazing-techniques" : "/call"}
+                  href={selectedMentor ? "/sessions" : "/call"}
                   variant="solid"
                   rounded="xl"
                 >

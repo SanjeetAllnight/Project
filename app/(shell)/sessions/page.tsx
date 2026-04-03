@@ -125,8 +125,11 @@ export default function SessionsPage() {
               ? Array.from({ length: 2 }).map((_, index) => (
                   <Skeleton key={index} className="h-[180px] w-full" />
                 ))
-              : toUpcomingSessionCards(upcomingSessions).map((session) => (
-                  <SessionCard key={session.id ?? session.title} session={session} />
+              : toUpcomingSessionCards(upcomingSessions).map((session, index) => (
+                  <SessionCard
+                    key={`${session.title}-${index}`}
+                    session={session}
+                  />
                 ))}
           </div>
         </section>
@@ -145,8 +148,11 @@ export default function SessionsPage() {
               ? Array.from({ length: 2 }).map((_, index) => (
                   <Skeleton key={index} className="h-[180px] w-full" />
                 ))
-              : toPastSessionCards(pastSessions).map((session) => (
-                  <SessionCard key={session.id ?? session.title} session={session} />
+              : toPastSessionCards(pastSessions).map((session, index) => (
+                  <SessionCard
+                    key={`${session.title}-${index}`}
+                    session={session}
+                  />
                 ))}
           </div>
         </section>
